@@ -1,4 +1,6 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Entity",
   "type": "object",
   "properties": {
     "name": {
@@ -30,78 +32,7 @@
               "format": "table",
               "id": "fields",
               "items": {
-                "type": "object",
-                "properties": {
-                  "field": {
-                    "type": "string"
-                  },
-                  "header": {
-                    "type": "string"
-                  },
-                  "inList": {
-                    "type": "boolean"
-                  },
-                  "inDetail": {
-                    "type": "boolean"
-                  },
-                  "isDefault": {
-                    "type": "boolean"
-                  },
-                  "dataType":{
-                    "type": "string",
-                    "enum":[  
-                      "Int",
-                      "BigInt",
-                      "SmallInt",
-                      "TinyInt",
-                      
-                      "Decimal",
-                      "Float",
-                      
-                      "Date",
-                      "Time",
-                      "Datetime",
-                      
-                      "Text",
-                      "Binary",
-                      "Json",
-                      
-                      "NA"
-                    ]
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "text",
-                      "textarea",
-                      "editor",
-                      
-                      "number",
-                      
-                      "datetime",
-                      "date",
-                      
-                      "image",
-                      "gallery",
-                      "file",
-                      "json",
-                      
-                      "dropdown",
-                      "lookup",
-                      "multiselect",
-                      
-                      "crosstable",
-                      "subtable"
-                    ]
-                  },
-                  "options": {
-                    "type": "array",
-                    "format": "table",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
+                "$ref": "attribute.json"
               }
             }
           }
