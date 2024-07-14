@@ -55,6 +55,9 @@ namespace FluentCMS.Migrations.pg
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("__schemas");
                 });
 
