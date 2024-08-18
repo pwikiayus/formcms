@@ -69,7 +69,7 @@ export const RegisterPage: React.FC = () => {
                         </div>
                         <div className="p-field">
                             <label htmlFor="password">Password</label>
-                            <Password
+                            <Password toggleMask
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -78,7 +78,7 @@ export const RegisterPage: React.FC = () => {
                         </div>
                         <div className="p-field">
                             <label htmlFor="confirmPassword">Confirm Password</label>
-                            <Password
+                            <Password toggleMask
                                 id="confirmPassword"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
