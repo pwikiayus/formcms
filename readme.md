@@ -22,7 +22,7 @@ source code [Example Blog Project](https://github.com/fluent-cms/fluent-cms/tree
     - Password: `Admin1!`
 - Public Site : https://fluent-cms-admin.azurewebsites.net/
 
-## Add Fluent CMS to your own project
+## Adding Fluent CMS to your own project
 <details>
   <summary>
       The following chapter will guid you through add Fluent CMS to your own project by adding a nuget package.
@@ -54,7 +54,7 @@ source code [Example Blog Project](https://github.com/fluent-cms/fluent-cms/tree
    ```
    When you start your web app for the first time, in function `app.UseCmsAsync`, if fluentCMS didn't find client app, it will try to copy client file to `wwwroot` you application. 
    After copy these files, it will prompt `FluentCMS client files are copied to wwwroot, please start the app again`.
-   You can also copy these two app manually, you can find these two app at nuget's package folder
+   You can also copy these two app manually, you can find these two app at nuget's package folder.  
    By default, when you install a NuGet package, it gets stored in a global cache folder on your machine. You can find it at:
    - Windows: C:\Users\<YourUsername>\.nuget\packages
    - Mac/Linux: ~/.nuget/packages
@@ -162,8 +162,15 @@ With these configurations, your minimal viable product is ready to use.
   </summary>
 
 ### Add validation logic using simple c# express
-You can add simple c# expression to  `Validation Rule` of attributes, the expression is supported by [Dynamic Expresso](https://github.com/dynamicexpresso/DynamicExpresso).
-for example you can add simple expression like `name != null`.
+
+#### Simple C# logic
+You can add simple c# expression to  `Validation Rule` of attributes, the expression is supported by [Dynamic Expresso](https://github.com/dynamicexpresso/DynamicExpresso).  
+For example, you can add simple expression like `name != null`.  
+You can also add `Validation Error Message`, the end user can see this message if validate fail.
+
+#### Regular Expression Support
+`Dynamic Expresso` supports regex, for example you can write Validation Rule `Regex.IsMatch(email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$")`.   
+Because `Dyamic Expresso` doesn't support [Verbatim String](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/verbatim), you have to escape `\`.
 
 ### Extent functionality by add Hook functions
 You need to add your own Business logic, for examples, you want to verify if the email and phone number of entity `teacher` is valid.
@@ -183,7 +190,8 @@ app.RegisterCmsHook("teacher", [Occasion.BeforeInsert, Occasion.BeforeUpdate],(I
 }
 ```
 
-### Produce Events to Kafka
+### Produce Events to Event Broker(e.g.Kafka)
+You can also choose produce events to Event Broker(e.g.Kafka), so Consumer Application function can implement business logic in a async manner.
 The producing event functionality is implemented by adding hook functions behind the scene,  to enable this functionality, you need add two line of code,
 `builder.AddKafkaMessageProducer("localhost:9092");` and `app.RegisterMessageProducerHook()`.
 
@@ -209,7 +217,7 @@ The built-in permission control in Fluent CMS offers four privilege types for ea
 
 Additionally, Fluent CMS supports custom roles, where a user's privileges are a combination of their individual entity privileges and the privileges assigned to their role.
 
-To enable fluentCMS' build-in permission control feature, add the following line to builder.
+To enable fluentCMS' build-in permission control feature, add the following line .
 ```
 //add fluent cms' permission control service 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
@@ -239,7 +247,7 @@ As shown in the screenshot below, we aim to design a course detail page. In addi
 - Teacher's bio and skills
 - Course-related materials, such as videos   
 ![Course](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/page-course.png)
-### RESTful API
+### RESTFul API
 
 FluentCMS provides Query APIs that address the following needs, similar to GraphQL:
 
@@ -374,73 +382,124 @@ If the number of IDs exceeds the page size, only the first set will be returned.
 
 </details>
 
-## Design Web Page
+
+## Designing Web Page in FluentCMS
+
 <details>
  <summary>
-The Page designer is built on the open-source project GrapesJS and Handlebars, allowing you to bind pages with FluentCMS queries for dynamic content rendering.
-</summary>
+    The page designer is built using the open-source project GrapesJS and Handlebars, allowing you to bind `GrapesJS Components` with `FluentCMS Queries` for dynamic content rendering.
+  </summary>
 
 ### Introduction to GrapesJS Panels
 
-GrapesJS has a user interface with four main panels. 
+The GrapesJS Page Designer UI provides a toolbox with four main panels:
 
-![Grapes.js-toolbox](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/grapes-toolbox.png)
-1. **Style Manager**: Allows users to customize the CSS properties of selected elements on the canvas, with no modifications made by FluentCMS to this panel.
-2. **Traits Panel**: Used to modify attributes of selected elements, with FluentCMS adding custom traits to help the page renderer bind data to pages.
-3. **Layers Panel**: Displays a hierarchical view of page elements, similar to the DOM structure. FluentCMS does not customize this panel but it is useful for locating FluentCMS blocks.
-4. **Blocks Panel**: Contains pre-made blocks or components for drag-and-drop functionality, with FluentCMS adding its own customized blocks.
+![GrapesJS Toolbox](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/grapes-toolbox.png)
+1. **Style Manager**: Lets users customize CSS properties of selected elements on the canvas. FluentCMS does not modify this panel.
+2. **Traits Panel**: Allows you to modify attributes of selected elements. FluentCMS adds custom traits to bind data to components here.
+3. **Layers Panel**: Displays a hierarchical view of page elements similar to the DOM structure. FluentCMS does not customize this panel, but it’s useful for locating FluentCMS blocks.
+4. **Blocks Panel**: Contains pre-made blocks or components for drag-and-drop functionality. FluentCMS adds its own customized blocks here.
 
-### Tailwind CSS support
-Fluent CMS page render include the following CSS by default.
+### Tailwind CSS Support
+FluentCMS includes Tailwind CSS by default for page rendering, using the following styles:
+
 ```html
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/base.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/components.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/@tailwindcss/typography@0.1.2/dist/typography.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/utilities.min.css">
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/base.min.css">
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/components.min.css">
+<link rel="stylesheet" href="https://unpkg.com/@tailwindcss/typography@0.1.2/dist/typography.min.css">
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.4.6/dist/utilities.min.css">
 ```
-### Page Type: Landing Page vs Detail Page
-#### **Landing Page**: A landing page is typically the first page a visitor sees.  
-Data in the following example landing page comes from 3 data sources:
-   - Featured Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?status=featured
-   - Advanced Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?level=Advanced
-   - Beginner Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?level=Beginner
-![LandingPage](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/landing-page.png)
-#### **Detail Page**: A detail page provides in-depth information about a specific item.   
-Fluent CMS use the router param to retrieve the specific item
 
-![Course](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/page-course.png)
+### Page Types: Landing Page, Detail Page, and Home Page
 
-### Data Binding: single Field or repeat field 
+#### **Landing Page**:
+A landing page is typically the first page a visitor sees.   
+The URL format is `/page/<pagename>`.    
+A landing page is typically composed of multiple `Multiple Records Components`, each with its own `Query`, making the page-level `Query` optional.
 
+![Landing Page](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/page-landing.png)
 
-### Image And Link
+#### **Detail Page**:
+A detail page provides specific information about an item.  
+The URL format is `/page/<pagename>/<router parameter>`, and FluentCMS retrieves data by passing the router parameter to the `FluentCMS Query`. For example, for a course detail page:
+- Page Name: `course/{id}`
+- Query: `courses`
+
+For the page URL `https://fluent-cms-admin.azurewebsites.net/pages/course/3`, FluentCMS will call the query `https://fluent-cms-admin.azurewebsites.net/api/queries/courses/one?id=3`.
+
+![Course Detail Page](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/page-course.png)
+
+#### **Home Page**:
+The homepage is a special landing page with the name `home`. Its URL is `/pages/home`. If no other route handles the path `/`, FluentCMS will render `/` as `/pages/home`.
+
+### Data Binding: Singleton or Multiple Records
+
+FluentCMS uses [Handlebars expression](https://github.com/Handlebars-Net/Handlebars.Net) for dynamic data binding.
+
+#### Singleton
+Singleton fields are enclosed within `{{ }}`.
+
+![Singleton Field](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/designer-single-field.png)
+
+#### Multiple Records
+`Handlebars` loops over arrays using the `each` block.
+
+```handlebars
+{{#each course}}
+    <li>{{title}}</li>
+{{/each}}
+```
+
+However, you won’t see the `{{#each}}` statement in the GrapesJS Page Designer. FluentCMS adds it automatically for any block under the `Multiple Records` category.
+
+Steps to bind multiple records:
+1. Drag a block from the `Multiple Records` category.
+   ![Multiple Record Blocks](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/designer-multiple-record-block.png)
+
+2. Hover over the GrapesJS components to find a block with the `Multiple-records` tag in the top-left corner, then click the `Traits` panel. You can also use the GrapesJS Layers Panel to locate the component.
+   ![Multiple Record Select](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/designer-multiple-record-select.png)
+
+3. In the `Traits` panel, you have the following options:
+    - **Field**: Specify the field name for the Page-Level Query (e.g., for the FluentCMS Query below, you could set the field as `teacher.skills`).
+
+      ```json
+      {
+        "teacher": {
+          "firstname": "",
+          "skills": [
+            {
+              "name": "cooking fish",
+              "years": 3
+            }
+          ]
+        }
+      }
+      ```
+    - **Query**: The query to retrieve data.
+    - **Qs**: Query string parameters to pass (e.g., `?status=featured`, `?level=Advanced`).
+    - **Offset**: Number of records to skip.
+    - **Limit**: Number of records to retrieve.
+
+   ![Multiple Record Trait](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/designer-multiple-record-trait.png)
+
+### Linking and Images
+
+FluentCMS does not customize GrapesJS' Image and Link components, but locating where to input `Query Field` can be challenging. The steps below explain how to bind them.
+
+- **Link**:
+  Locate the link by hovering over the GrapesJS component or finding it in the `GrapesJS Layers Panel`. Then switch to the `Traits Panel` and input the detail page link, e.g., `/pages/course/{{id}}`. FluentCMS will render this as `<a href="/pages/course/3">...</a>`.
+
+- **Image**:
+  Double-click on the image component, input the image path, and select the image. For example, if the image field is `thumbnail_image_url`, input `/files/{{thumbnail_image_url}}`. FluentCMS will replace `{{thumbnail_image_url}}` with the actual field value.
+
+  ![Designer Image](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/designer-image.png)
 
 ### Customized Blocks
+FluentCMS adds customized blocks to simplify web page design and data binding for `FluentCMS Queries`. These blocks use Tailwind CSS.
 
-
-#### Landing Page
-In previous chapter, we have defined query APIs to combine data from multiple entities, now is time to design front-end web pages to render the data.
-To manage pages, go to `schema builder` > `pages`.
-
-
-1. For above page, the data comes from 3 Queries
-    - Featured Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?status=featured
-    - Advanced Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?level=Advanced
-    - Beginner Courses,  https://fluent-cms-admin.azurewebsites.net/api/queries/courses?level=Beginner
-2. Drag a Content Block from `Blocks Panel` > `Extra` to Canvas,
-   To Bind a multiple records trait to a data source, hover mouse to a element with `Multiple-records` tooltips, select the element, then the traits panels shows. There are the following options
-    - field
-    - query
-    - qs : stands for query string, e.g. the Beginner Course section use level=Beginner to add a constraint only beginner course can show in this section.
-    - offset
-    - limit
-      ![Grapes](https://raw.githubusercontent.com/fluent-cms/fluent-cms/doc/doc/screenshots/graps-traits.png)
-#### Detail Page
-We normally give a router parameter to Detail page, e.g. https://fluent-cms-admin.azurewebsites.net/pages/course/7.  
-The suffix `.detail` should be added to page name, the page `course.detail` corresponds to above path.  
-Detail page need to call query with query parameter `router.key`
-
-You can also add `Multipe-records` elements to detail page, if you don't specify query, page render tries to resolve the field from query result of the page.
+- **Multiple Records**: Components in this category contain subcomponents with a `Multiple-Records` trait.
+- **Card**: Typically used in detail pages.
+- **Header**: Represents a navigation bar or page header.
 </details>
 
 ## Development
