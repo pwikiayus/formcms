@@ -12,9 +12,6 @@
 
 export enum DefaultAttributeNames {
     Id = "id",
-    Deleted = "deleted",
-    CreatedAt = "createdAt",
-    UpdatedAt = "updatedAt",
     PublishedAt = "publishedAt",
     PublicationStatus = "publicationStatus",
 }
