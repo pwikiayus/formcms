@@ -1,7 +1,7 @@
-export const relatedList = {
+export const featuredList = {
     category: 'Data List',
-    name: 'related-list',
-    label: 'Related List',
+    name: 'featured-list',
+    label: 'Featured List',
     media: `
     <svg viewBox="0 0 1024 1024" class="icon" xmlns="http://www.w3.org/2000/svg">
         <rect x="64" y="64" width="896" height="896" fill="#E1F0FF"/>
