@@ -1,14 +1,13 @@
 using FormCMS.Activities.Models;
 using FormCMS.Core.Descriptors;
-using FormCMS.Core.HookFactory;
 using Attribute = FormCMS.Core.Descriptors.Attribute;
 
 namespace FormCMS.Activities.Services;
 
-public class ActivityPlugin(
+public class ActivityQueryPlugin(
     ActivitySettings settings,
     IActivityCollectService activityCollectService 
-    ):IActivityPlugin
+    ):IActivityQueryPlugin
 {
     public async Task LoadCounts(LoadedEntity entity, IEnumerable<ExtendedGraphAttribute> attributes, IEnumerable<Record> records, CancellationToken ct)
     {
@@ -31,24 +30,5 @@ public class ActivityPlugin(
                 record[ActivityCounts.ActivityCountField(t)] = countDict.TryGetValue(t, out var j) ? j : 0;
             }
         }
-    }
-
-    public Entity[] ExtendEntities(IEnumerable<Entity> entities)
-    {
-        var attrs = settings
-            .AllCountTypes()
-            .Select(type => new Attribute(
-                Field: ActivityCounts.ActivityCountField(type),
-                Header: ActivityCounts.ActivityCountField(type),
-                DataType: DataType.Int)
-            );
-        entities = entities.Select(x => x with
-        {
-            Attributes = [
-                ..x.Attributes,
-                ..attrs,
-            ]
-        });
-        return entities.ToArray();
     }
 }

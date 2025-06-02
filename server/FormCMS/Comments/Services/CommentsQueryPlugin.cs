@@ -10,9 +10,9 @@ using Attribute = FormCMS.Core.Descriptors.Attribute;
 
 namespace FormCMS.Comments.Services;
 
-public class CommentsQueryQueryPlugin(
-    KateQueryExecutor executor,
-    IIdentityService identityService
+public class CommentsQueryPlugin(
+    IUserManageService userManageService,
+    KateQueryExecutor executor
 ) : ICommentsQueryPlugin
 {
 
@@ -26,7 +26,7 @@ public class CommentsQueryQueryPlugin(
         comments = SetSpan(comments,span, commentsAttr.Sorts,pg.Limit);
       
         var userIds = GetUserIds(comments);
-        var users = await identityService.GetPublicUserInfos(userIds,ct);
+        var users = await userManageService.GetPublicUserInfos(userIds,ct);
         var userDict = users.ToDictionary(x => x.Id);
         SetUserInfo(comments,userDict);
         return comments;
@@ -40,7 +40,7 @@ public class CommentsQueryQueryPlugin(
         var commentsAttr = query.ExtendedSelection.FirstOrDefault(x => x.Field == CommentHelper.CommentsField);
         if (commentsAttr is null) return;
         await GetComments(records, query.Entity, commentsAttr.Sorts, commentsAttr.Pagination, ct);
-        await LoadPublicUserInfos(records, ct);
+        await LoadPublicUserInfos(userManageService,records, ct);
     }
 
     public Entity[] ExtendEntities(IEnumerable<Entity> entities)
@@ -83,13 +83,13 @@ public class CommentsQueryQueryPlugin(
         }
     }
     
-    private async Task LoadPublicUserInfos(Record[] records, CancellationToken ct)
+    private async Task LoadPublicUserInfos(IUserManageService userManageService,Record[] records, CancellationToken ct)
     {
         var userIds = new HashSet<string>();
         userIds = records.Aggregate(userIds,
             (current, record) => [..current, ..GetUserIds(record[CommentHelper.CommentsField] as Record[])]);
 
-        var users = await identityService.GetPublicUserInfos(userIds,ct);
+        var users = await userManageService.GetPublicUserInfos(userIds,ct);
         var userDict = users.ToDictionary(x => x.Id);
         foreach (var record in records)
         {
