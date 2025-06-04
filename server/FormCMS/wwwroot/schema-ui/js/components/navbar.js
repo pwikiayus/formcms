@@ -1,8 +1,7 @@
-import {logout} from "./repo.js";
+import { logout } from "../services/services.js";
 
-export function loadNavBar(container){
-    
-    $(container).html(`
+export function loadNavBar(container) {
+    const html = `
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="/">
             <img alt="logo" src="img/fluent-cms.png" height="40" class="mr-2">
@@ -16,9 +15,21 @@ export function loadNavBar(container){
             <a class="nav-item nav-link border-item" href="../admin">Admin Panel</a>
             <a id="nav-item-exit" class="nav-item nav-link border-item" href="#">Exit</a>
         </div>
-    </nav>`);
-    $("#nav-item-exit").on('click', function(e){
-        e.preventDefault();
-        logout().then(()=>window.location.href='/');
-    })
+    </nav>`;
+
+    if (typeof container === "string") {
+        document.querySelector(container).innerHTML = html;
+    } else if (container instanceof HTMLElement) {
+        container.innerHTML = html;
+    }
+
+    const exitLink = document.getElementById("nav-item-exit");
+    if (exitLink) {
+        exitLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            logout().then(() => {
+                window.location.href = "/";
+            });
+        });
+    }
 }

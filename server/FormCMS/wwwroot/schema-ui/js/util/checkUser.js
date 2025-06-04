@@ -1,4 +1,4 @@
-import {getUserInfo} from "./repo.js"
+import {getUserInfo} from "../services/services.js"
 export function checkUser(onSuccess){
     getUserInfo().then(({_,error})=>
     {
