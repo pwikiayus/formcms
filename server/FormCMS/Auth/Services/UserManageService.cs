@@ -7,7 +7,7 @@ using FormCMS.Utils.ResultExt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace FormCMS.Auth;
+namespace FormCMS.Auth.Services;
 
 public class UserManageService<TUser>(
     KateQueryExecutor executor,
