@@ -1,17 +1,14 @@
 ﻿using FormCMS.Subscriptions.Models;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using Stripe;
-using static FormCMS.SystemSettings;
 
 namespace FormCMS.Subscriptions.Services
 {
-    public class StripeProdService(
-        ProductService productService,
-        IOptions<StripeSecretOptions> conf,
-        PriceService priceService
+    public class StripeProdSvcImpl(
+        IOptions<StripeSettings> conf
     ) : IProductService
     {
+        private readonly RequestOptions _requestOptions = new() { ApiKey = conf.Value.SecretKey };
         public async Task<StripeProduct> Add(StripeProduct product, CancellationToken ct)
         {
             var options = new ProductCreateOptions
@@ -28,15 +25,13 @@ namespace FormCMS.Subscriptions.Services
                 },
             };
 
-            var prod = await productService.CreateAsync(
+            var prod = await new ProductService().CreateAsync(
                 options,
-                new RequestOptions { ApiKey = conf.Value.StripeSecretKey }
-            );
-            var price = await priceService.GetAsync(
+                new RequestOptions { ApiKey = conf.Value.SecretKey }, ct);
+            var price = await new PriceService().GetAsync(
                 prod.DefaultPriceId,
                 null,
-                new RequestOptions { ApiKey = conf.Value.StripeSecretKey }
-            );
+                _requestOptions, ct);
             if (price != null && price.UnitAmount != null)
                 return new StripeProduct(
                     "Product",
@@ -59,14 +54,13 @@ namespace FormCMS.Subscriptions.Services
         public async Task<IEnumerable<StripeProduct>> List(int count, CancellationToken ct)
         {
             List<StripeProduct> stripeProducts = new List<StripeProduct>();
-            var reqOption = new RequestOptions { ApiKey = conf.Value.StripeSecretKey };
             var options = new ProductListOptions { Limit = count };
-            StripeList<Product> products = await productService.ListAsync(options, reqOption);
+            StripeList<Product> products = await new ProductService().ListAsync(options, _requestOptions,ct);
             foreach (var product in products.Data)
             {
                 var price =
                     product.DefaultPriceId != null
-                        ? priceService.Get(product.DefaultPriceId, null, reqOption)
+                        ? await new PriceService().GetAsync(product.DefaultPriceId, null, _requestOptions, ct)
                         : null;
                 if (price != null)
                     stripeProducts.Add(
@@ -100,16 +94,16 @@ namespace FormCMS.Subscriptions.Services
 
         public async Task<StripeProduct> Single(string id, CancellationToken ct)
         {
-            var prod = await productService.GetAsync(
+            var prod = await new ProductService().GetAsync(
                 id,
                 null,
-                new RequestOptions { ApiKey = conf.Value.StripeSecretKey },
+                _requestOptions,
                 ct
             );
-            var price = await priceService.GetAsync(
+            var price = await new PriceService().GetAsync(
                 prod.DefaultPriceId,
                 null,
-                new RequestOptions { ApiKey = conf.Value.StripeSecretKey },
+                _requestOptions,
                 ct
             );
             return new StripeProduct(
