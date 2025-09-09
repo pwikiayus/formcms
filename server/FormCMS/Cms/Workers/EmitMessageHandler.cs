@@ -9,11 +9,11 @@ using FormCMS.Utils.ResultExt;
 namespace FormCMS.Cms.Workers;
 public record EmitMessageWorkerOptions(int DelaySeconds);
 
-public class EmitMessageWorker(
+public class EmitMessageHandler(
     EmitMessageWorkerOptions options,
     IServiceScopeFactory scopeFactory,
     IStringMessageProducer producer,
-    ILogger<EmitMessageWorker> logger
+    ILogger<EmitMessageHandler> logger
 ) : TaskWorker(serviceScopeFactory: scopeFactory, logger: logger,delaySeconds: options.DelaySeconds)
 {
     protected override async Task DoTask(
