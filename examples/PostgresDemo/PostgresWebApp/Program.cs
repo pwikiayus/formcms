@@ -4,7 +4,10 @@ using FormCMS.Activities.Models;
 using FormCMS.Activities.Workers;
 using FormCMS.Auth.Models;
 using FormCMS.Cms.Workers;
+using FormCMS.Comments.Builders;
 using FormCMS.Core.Auth;
+using FormCMS.Core.HookFactory;
+using FormCMS.Core.Plugins;
 using FormCMS.Infrastructure.EventStreaming;
 using FormCMS.Infrastructure.Fts;
 using FormCMS.Search.Workers;
@@ -17,12 +20,12 @@ using PostgresWebApp;
 
 const string apiKey = "12345";
 var webBuilder = WebApplication.CreateBuilder(args);
+webBuilder.WebHost.ConfigureKestrel(option => option.Limits.MaxRequestBodySize = 15 * 1024 * 1024);
 var connectionString = webBuilder.Configuration.GetConnectionString("postgres")!;
 
 // communication between web app and worker app
 webBuilder.AddNatsClient(connectionName:"nats");
-webBuilder.WebHost.ConfigureKestrel(option => option.Limits.MaxRequestBodySize = 15 * 1024 * 1024);
-
+webBuilder.Services.AddSingleton<IStringMessageProducer, NatsMessageBus>();
 
 webBuilder.Services.AddOutputCache();
 webBuilder.Services.AddPostgresCms(connectionString);
@@ -33,7 +36,7 @@ webBuilder.Services.AddCmsAuth<CmsUser, IdentityRole, AppDbContext>(new AuthConf
 webBuilder.Services.AddAuditLog();
 webBuilder.Services.AddActivity();
 webBuilder.Services.AddComments();
-webBuilder.Services.AddVideoMessageProducer();
+webBuilder.Services.AddVideo();
 webBuilder.Services.AddCrudMessageProducer(["course"]);
 
 webBuilder.Services.AddScoped<IFullTextSearch, PostgresFts>();
@@ -42,8 +45,6 @@ webBuilder.Services.AddSearch();
 // need to set stripe keys to appsettings.json
 webBuilder.Services.Configure<StripeSettings>(webBuilder.Configuration.GetSection("Stripe"));
 webBuilder.Services.AddSubscriptions();
-
-webBuilder.Services.AddSingleton<IStringMessageProducer, NatsMessageBus>();
 
 var webApp = webBuilder.Build();
 
@@ -60,8 +61,9 @@ await webApp.EnsureCmsUser("sadmin@cms.com", "Admin1!", [Roles.Sa]).Ok();
 await webApp.EnsureCmsUser("admin@cms.com", "Admin1!", [Roles.Admin]).Ok();
 
 var workerBuilder = Host.CreateApplicationBuilder(args);
-//worker and web are two independent instance, still need add cms services
+workerBuilder.Services.AddScoped<IFullTextSearch,PostgresFts>();
 
+//worker and web are two independent instances, still need to add cms services
 workerBuilder.Services.AddPostgresCms(connectionString);
 workerBuilder.Services.AddActivity();
 workerBuilder.Services.AddComments();
@@ -71,7 +73,6 @@ workerBuilder.Services.AddSearch();
 // web app -> worker
 workerBuilder.AddNatsClient(connectionName:"nats");
 workerBuilder.Services.AddSingleton<IStringMessageConsumer, NatsMessageBus>();
-
 // worker call rest api to notify web
 workerBuilder.Services.AddSingleton(new CmsRestClientSettings( "http://localhost:5119", apiKey));
 
@@ -79,6 +80,7 @@ workerBuilder.Services.AddSingleton(ActivitySettingsExtensions.DefaultActivitySe
 workerBuilder.Services.AddHostedService<ActivityEventHandler>();
 
 workerBuilder.Services.AddHostedService<FFMpegWorker>();
+
 
 workerBuilder.Services.AddSingleton( new FtsSettings(["course"]));
 workerBuilder.Services.AddHostedService<FtsIndexingMessageHandler>();
@@ -97,7 +99,15 @@ workerBuilder.Services.AddHostedService<DataPublishingWorker>();
 
 workerBuilder.Services.AddSingleton<IStringMessageProducer, NatsMessageBus>();
 var workerApp = workerBuilder.Build();
-workerApp.Services.GetService<ActivityBuilder>()?.UseActivity(app);
+var hookRegistry = workerApp.Services.GetRequiredService<HookRegistry>();
+var pluginRegistry = workerApp.Services.GetRequiredService<PluginRegistry>();
+var activitySettings = workerApp.Services.GetRequiredService<ActivitySettings>();
+hookRegistry.RegisterActivityHooks();
+hookRegistry.RegisterCommentsHooks();
+
+pluginRegistry.RegisterActivityPlugins(activitySettings);
+pluginRegistry.RegisterCommentPlugins();
+
 
 await Task.WhenAll(
     webApp.RunAsync(),
